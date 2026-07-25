@@ -1,0 +1,17 @@
+{
+  "name": "venture-day1",
+  "version": "1.0.0",
+  "description": "VENTURE Day 1 Live Web App — real-time quiz, leaderboard, CEO draft",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "ws": "^8.18.0",
+    "better-sqlite3": "^11.3.0",
+    "cookie-parser": "^1.4.7",
+    "nanoid": "^3.3.7"
+  },
+  "engines": { "node": ">=18" }
+}

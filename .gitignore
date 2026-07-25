@@ -1,0 +1,6 @@
+node_modules/
+venture.db
+venture.db-shm
+venture.db-wal
+.env
+.DS_Store

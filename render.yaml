@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: venture-day1
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /
+    disk:
+      name: venture-data
+      mountPath: /opt/render/project/src
+      sizeGB: 1
