@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VENTURE · Admin Control</title>
+<link rel="stylesheet" href="/shared.css">
+<style>
+  .admin-grid { display: grid; grid-template-columns: 260px 1fr; gap: 20px; }
+  @media (max-width: 900px) { .admin-grid { grid-template-columns: 1fr; } }
+  .side-btn {
+    display: block; width: 100%; text-align: left; padding: 12px 14px;
+    background: transparent; border: 1px solid var(--border); color: var(--text-soft);
+    border-radius: 10px; margin-bottom: 8px; cursor: pointer; font: inherit; font-weight: 600; font-size: 14px;
+    transition: all .15s;
+  }
+  .side-btn:hover { background: var(--glass-strong); color: var(--text); }
+  .side-btn.active { background: linear-gradient(90deg, var(--accent-1), var(--accent-2)); color: white; border-color: transparent; box-shadow: 0 6px 18px rgba(255,94,171,0.3); }
+  .action-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+  .action-btn {
+    padding: 18px; background: var(--glass); border: 1px solid var(--border); border-radius: 14px;
+    color: var(--text); font-family: inherit; text-align: left; cursor: pointer; transition: all .15s;
+  }
+  .action-btn:hover { border-color: var(--accent-2); background: var(--glass-strong); transform: translateY(-2px); }
+  .action-btn .a-icon { font-size: 24px; margin-bottom: 8px; display: block; }
+  .action-btn .a-title { font-weight: 800; margin-bottom: 4px; }
+  .action-btn .a-desc { color: var(--text-mute); font-size: 12px; }
+  .event-row { padding: 12px 14px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; gap: 12px; align-items: center; font-size: 13px; }
+  .event-row:last-child { border-bottom: 0; }
+  .event-time { color: var(--text-mute); font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .draft-grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 20px; }
+  @media (max-width: 900px) { .draft-grid { grid-template-columns: 1fr; } }
+  .pool-item {
+    padding: 10px 14px; background: var(--glass); border: 1px solid var(--border);
+    border-radius: 10px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;
+    font-size: 14px; cursor: pointer; transition: all .15s;
+  }
+  .pool-item:hover { border-color: var(--accent-3); background: var(--glass-strong); }
+  .team-block { padding: 14px; background: var(--glass); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; }
+  .team-block.active { border-color: var(--accent-4); box-shadow: 0 0 0 2px rgba(255,184,74,0.3); }
+  .member { padding: 6px 10px; background: var(--glass-strong); border-radius: 6px; font-size: 13px; margin-top: 4px; }
+  .member.ceo { background: linear-gradient(90deg, var(--accent-4), var(--accent-1)); color: #0a0616; font-weight: 800; }
+</style>
+</head>
+<body>
+
+<header class="top-bar">
+  <div class="logo">
+    <div class="logo-mark">V</div>
+    <div class="logo-block"><span>VENTURE</span><span class="logo-sub">Admin Control</span></div>
+  </div>
+  <div class="top-actions">
+    <div class="pill"><span class="dot"></span> Phase: <b id="curPhase">waiting</b></div>
+    <button id="logoutBtn" class="btn-ghost hidden">Logout</button>
+  </div>
+</header>
+
+<main class="container">
+
+  <!-- ADMIN LOGIN -->
+  <section id="scr-login" class="card container-narrow" style="margin-top:6vh;">
+    <div class="center">
+      <span class="tag tag-gold">Admin</span>
+      <h1 style="margin-top:12px;">Admin <span class="gradient-text">Login</span></h1>
+      <p class="lead">Enter your credentials to access the VENTURE control panel.</p>
+    </div>
+    <div class="field"><label>Username</label><input id="u" type="text" value="admin"></div>
+    <div class="field"><label>Password</label><input id="p" type="password" placeholder="••••••••"></div>
+    <button id="loginBtn" class="btn btn-lg" style="width:100%;">Sign in</button>
+    <div id="loginErr" class="tag tag-red" style="margin-top:14px; display:none;"></div>
+    <p class="muted center" style="margin-top:20px;">Default: <code>admin</code> / <code>venture2026</code></p>
+  </section>
+
+  <!-- ADMIN CONSOLE -->
+  <section id="scr-console" class="hidden">
+    <div class="admin-grid">
+
+      <!-- Sidebar -->
+      <aside>
+        <div class="card card-tight">
+          <button class="side-btn active" data-tab="control">🎛 Control Center</button>
+          <button class="side-btn" data-tab="leaderboard">📊 Leaderboard</button>
+          <button class="side-btn" data-tab="monitor">👁 Silent Monitor</button>
+          <button class="side-btn" data-tab="ceos">👑 CEOs</button>
+          <button class="side-btn" data-tab="draft">🎯 Draft</button>
+          <button class="side-btn" data-tab="teams">🏢 Teams</button>
+          <button class="side-btn" data-tab="danger">⚠ Danger Zone</button>
+        </div>
+        <div class="card card-tight" style="margin-top:12px;">
+          <div class="muted" style="font-size:11px; letter-spacing:2px; text-transform:uppercase; margin-bottom:6px;">Live</div>
+          <div class="row-between"><span>Online</span><b id="stat-online">0</b></div>
+          <div class="row-between"><span>Registered</span><b id="stat-total">0</b></div>
+          <div class="row-between"><span>R1 Done</span><b id="stat-r1">0</b></div>
+          <div class="row-between"><span>R2 Done</span><b id="stat-r2">0</b></div>
+          <div class="row-between"><span>R3 Done</span><b id="stat-r3">0</b></div>
+        </div>
+      </aside>
+
+      <!-- Content -->
+      <div>
+
+        <!-- Control -->
+        <div id="tab-control" class="tab-panel">
+          <div class="card">
+            <h2>Control <span class="gradient-text">Center</span></h2>
+            <p class="lead">Start rounds, reveal CEOs, open the draft, and export data.</p>
+            <h3 style="margin-top:20px;">Rounds</h3>
+            <div class="action-grid">
+              <button class="action-btn" onclick="startRound(1)"><span class="a-icon">▶️</span><div class="a-title">Start Round 1</div><div class="a-desc">Innovation & Entrepreneurship · 15 Qs</div></button>
+              <button class="action-btn" onclick="startRound(2)"><span class="a-icon">▶️</span><div class="a-title">Start Round 2</div><div class="a-desc">AI & Technology · 15 Qs</div></button>
+              <button class="action-btn" onclick="startRound(3)"><span class="a-icon">▶️</span><div class="a-title">Start Round 3</div><div class="a-desc">IGCF Rapid-Fire · 20 Qs</div></button>
+              <button class="action-btn" onclick="stopRound()"><span class="a-icon">⏹</span><div class="a-title">Stop Round</div><div class="a-desc">Pause the active round</div></button>
+            </div>
+            <h3 style="margin-top:24px;">Phases</h3>
+            <div class="action-grid">
+              <button class="action-btn" onclick="revealCEOs()"><span class="a-icon">👑</span><div class="a-title">Reveal Top 12 CEOs</div><div class="a-desc">Uses live scores to select CEOs</div></button>
+              <button class="action-btn" onclick="setPhase('draft')"><span class="a-icon">🎯</span><div class="a-title">Open Draft</div><div class="a-desc">Enable CEO team drafting</div></button>
+              <button class="action-btn" onclick="setPhase('final')"><span class="a-icon">🏢</span><div class="a-title">Reveal Final Teams</div><div class="a-desc">Show all students their teams</div></button>
+              <button class="action-btn" onclick="setPhase('waiting')"><span class="a-icon">⏸</span><div class="a-title">Return to Waiting</div><div class="a-desc">Waiting room screen for students</div></button>
+            </div>
+            <h3 style="margin-top:24px;">Utilities</h3>
+            <div class="action-grid">
+              <button class="action-btn" onclick="openLeaderboardWindow()"><span class="a-icon">📺</span><div class="a-title">Open Big Screen</div><div class="a-desc">Projector-ready leaderboard</div></button>
+              <button class="action-btn" onclick="exportCSV()"><span class="a-icon">💾</span><div class="a-title">Export CSV</div><div class="a-desc">Download all scores</div></button>
+              <button class="action-btn" onclick="seedDemo()"><span class="a-icon">🧪</span><div class="a-title">Seed 60 Demo Players</div><div class="a-desc">Test the flow instantly</div></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Leaderboard tab -->
+        <div id="tab-leaderboard" class="tab-panel hidden">
+          <div class="card">
+            <div class="row-between">
+              <div><h2>Live Leaderboard</h2><p class="muted">Real-time standings across all rounds.</p></div>
+              <button class="btn-ghost" onclick="openLeaderboardWindow()">Open Big Screen ↗</button>
+            </div>
+            <table class="board" style="margin-top:16px;">
+              <thead><tr><th>#</th><th>Name</th><th>R1</th><th>R2</th><th>R3</th><th style="text-align:right;">Total</th><th>Live</th></tr></thead>
+              <tbody id="lbBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Silent Monitor -->
+        <div id="tab-monitor" class="tab-panel hidden">
+          <div class="card">
+            <h2>Silent <span class="gradient-text">Activity Monitor</span></h2>
+            <p class="lead">Everything happening in the students' browsers — visible only to you.</p>
+            <div class="stats" style="margin-bottom:12px;">
+              <div class="stat"><div class="stat-num" id="ev-left">0</div><div class="stat-label">Left Site</div></div>
+              <div class="stat"><div class="stat-num" id="ev-copy">0</div><div class="stat-label">Copy Events</div></div>
+              <div class="stat"><div class="stat-num" id="ev-paste">0</div><div class="stat-label">Paste (AI?)</div></div>
+              <div class="stat"><div class="stat-num" id="ev-screen">0</div><div class="stat-label">Screenshots</div></div>
+              <div class="stat"><div class="stat-num" id="ev-devtools">0</div><div class="stat-label">DevTools</div></div>
+            </div>
+            <div class="row" style="margin-bottom:12px;">
+              <input id="evFilter" type="text" placeholder="Filter by name…" style="max-width:280px;">
+              <button class="btn-ghost" onclick="loadEvents()">Refresh</button>
+            </div>
+            <div id="eventList" class="card card-tight" style="max-height:520px; overflow-y:auto;"></div>
+          </div>
+        </div>
+
+        <!-- CEO -->
+        <div id="tab-ceos" class="tab-panel hidden">
+          <div class="card">
+            <h2>Top 12 <span class="gradient-text">CEOs</span></h2>
+            <p class="lead">Ranked by total score across all 3 rounds.</p>
+            <div id="ceoGrid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px;"></div>
+            <div style="margin-top:20px;"><button class="btn btn-cyan" onclick="revealCEOs()">Refresh / Lock Top 12 as CEOs</button></div>
+          </div>
+        </div>
+
+        <!-- Draft -->
+        <div id="tab-draft" class="tab-panel hidden">
+          <div class="card">
+            <div class="row-between">
+              <div><h2>Live <span class="gradient-text">CEO Draft</span></h2><p class="muted">Click a student, then click the CEO's team to assign them. Every team fits 5 (1 CEO + 4 members).</p></div>
+              <button class="btn-ghost" onclick="resetDraft()">Reset Draft</button>
+            </div>
+            <div class="draft-grid" style="margin-top:16px;">
+              <div>
+                <h3>Available Students (<span id="poolCount">0</span>)</h3>
+                <div id="draftPool" style="max-height:520px; overflow-y:auto;"></div>
+              </div>
+              <div>
+                <h3>Startups Forming</h3>
+                <div id="draftTeams" style="max-height:560px; overflow-y:auto;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Teams -->
+        <div id="tab-teams" class="tab-panel hidden">
+          <div class="card">
+            <h2>Final <span class="gradient-text">Startups</span></h2>
+            <p class="lead">Each of the 12 startups is assigned to one of the 5 IGCF Pillars. Teams will build ventures that solve these real IGCF challenges.</p>
+            <div id="finalTeams" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:14px; margin-top:16px;"></div>
+          </div>
+        </div>
+
+        <!-- Danger -->
+        <div id="tab-danger" class="tab-panel hidden">
+          <div class="card">
+            <h2>Danger <span style="color:var(--danger);">Zone</span></h2>
+            <p class="lead">Actions here are irreversible.</p>
+            <div class="action-grid">
+              <button class="action-btn" onclick="wipeAll()" style="border-color: var(--danger);"><span class="a-icon">⚠️</span><div class="a-title" style="color:var(--danger);">Wipe All Data</div><div class="a-desc">Delete all students, scores, teams</div></button>
+              <button class="action-btn" onclick="adminLogout()"><span class="a-icon">🚪</span><div class="a-title">Logout Admin</div><div class="a-desc">End your admin session</div></button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>VENTURE · Admin Console · Powered by RQ Science & Technology</footer>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const IGCF_PILLARS = ['Food Security','Education','Public Health','Environmental Transformation','Green Economy'];
+let ws = null;
+let students = [];
+let eventCounts = { left:0, copy:0, paste:0, screen:0, devtools:0 };
+
+// ----- Auth -----
+async function checkAdmin() {
+  const r = await fetch('/api/admin/me');
+  const d = await r.json();
+  if (d.ok) { $('scr-login').classList.add('hidden'); $('scr-console').classList.remove('hidden'); $('logoutBtn').classList.remove('hidden'); init(); }
+  else { $('scr-login').classList.remove('hidden'); $('scr-console').classList.add('hidden'); }
+}
+$('loginBtn').onclick = async () => {
+  const r = await fetch('/api/admin/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ user: $('u').value, pass: $('p').value }) });
+  if (!r.ok) { $('loginErr').textContent='Invalid credentials.'; $('loginErr').style.display='inline-block'; return; }
+  checkAdmin();
+};
+$('p').addEventListener('keydown', e => { if (e.key === 'Enter') $('loginBtn').click(); });
+$('logoutBtn').onclick = adminLogout;
+async function adminLogout() { await fetch('/api/admin/logout', { method:'POST' }); location.reload(); }
+
+// ----- Tabs -----
+document.querySelectorAll('.side-btn').forEach(b => b.onclick = () => selectTab(b.dataset.tab));
+function selectTab(name) {
+  document.querySelectorAll('.side-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('.tab-panel').forEach(t => t.classList.add('hidden'));
+  $('tab-' + name).classList.remove('hidden');
+  if (name === 'leaderboard') renderLeaderboard();
+  if (name === 'ceos') renderCEOs();
+  if (name === 'draft') loadDraft();
+  if (name === 'teams') renderTeams();
+  if (name === 'monitor') loadEvents();
+}
+
+// ----- Init -----
+async function init() {
+  await loadStudents();
+  connectWS();
+}
+function connectWS() {
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  ws = new WebSocket(proto + '//' + location.host + '/?role=admin');
+  ws.onmessage = (m) => {
+    let msg = {};
+    try { msg = JSON.parse(m.data); } catch(e){return;}
+    if (msg.type === 'leaderboard') { students = msg.rows; refreshStats(); renderLeaderboard(); }
+    else if (msg.type === 'phase') { $('curPhase').textContent = msg.phase; }
+    else if (msg.type === 'event') { prependEvent(msg); bumpCounter(msg.type); }
+    else if (msg.type === 'draft_updated') { if (!$('tab-draft').classList.contains('hidden')) loadDraft(); }
+  };
+  ws.onclose = () => setTimeout(connectWS, 2000);
+}
+
+async function loadStudents() {
+  const r = await fetch('/api/admin/students');
+  const d = await r.json();
+  students = d.students;
+  refreshStats();
+  renderLeaderboard();
+}
+function refreshStats() {
+  $('stat-total').textContent = students.length;
+  $('stat-online').textContent = students.filter(s => s.is_online).length;
+  $('stat-r1').textContent = students.filter(s => s.r1_done).length;
+  $('stat-r2').textContent = students.filter(s => s.r2_done).length;
+  $('stat-r3').textContent = students.filter(s => s.r3_done).length;
+}
+
+// ----- Leaderboard render -----
+function renderLeaderboard() {
+  const sorted = [...students].sort((a,b) => (b.total||b.r1_score+b.r2_score+b.r3_score) - (a.total||a.r1_score+a.r2_score+a.r3_score));
+  const html = sorted.map((s,i) => {
+    const total = s.total != null ? s.total : (s.r1_score+s.r2_score+s.r3_score);
+    const cls = i < 12 && sorted.length ? 'ceo' : (i < 20 ? 'top' : '');
+    const rk = i === 0 ? 'rank top1' : 'rank';
+    return `<tr class="${cls}"><td class="${rk}">#${i+1}</td><td><b>${escape(s.name)}</b></td><td>${s.r1_score}</td><td>${s.r2_score}</td><td>${s.r3_score}</td><td class="score-cell">${total}</td><td>${s.is_online ? '<span class="dot"></span>' : '<span class="dot off"></span>'}</td></tr>`;
+  }).join('') || `<tr><td colspan="7" class="muted center">No students yet.</td></tr>`;
+  $('lbBody').innerHTML = html;
+}
+function renderCEOs() {
+  const sorted = [...students].sort((a,b) => (b.r1_score+b.r2_score+b.r3_score)-(a.r1_score+a.r2_score+a.r3_score));
+  const top = sorted.slice(0,12);
+  const html = top.map((s,i) => `<div class="card card-tight"><div class="tag tag-gold">CEO · Startup ${i+1}</div><h3 style="margin-top:10px;">${escape(s.name)}</h3><div class="muted">${s.r1_score + s.r2_score + s.r3_score} points</div></div>`).join('') || `<p class="muted">Need at least 12 players.</p>`;
+  $('ceoGrid').innerHTML = html;
+}
+
+// ----- Actions -----
+async function startRound(n){ await fetch('/api/admin/round/'+n+'/start', {method:'POST'}); }
+async function stopRound(){ await fetch('/api/admin/round/stop', {method:'POST'}); }
+async function setPhase(p){ await fetch('/api/admin/phase', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({phase:p})}); }
+async function revealCEOs(){ await fetch('/api/admin/ceo/reveal', {method:'POST'}); loadStudents(); selectTab('ceos'); }
+async function seedDemo(){ if (!confirm('Add 60 demo players with random scores?')) return; await fetch('/api/admin/seed-demo', {method:'POST'}); loadStudents(); }
+function exportCSV(){ window.location = '/api/admin/csv'; }
+async function wipeAll(){ if (!confirm('Wipe ALL players, scores, and teams? Cannot undo.')) return; await fetch('/api/admin/reset-all', {method:'POST'}); loadStudents(); }
+function openLeaderboardWindow(){ window.open('/leaderboard', 'venture_board', 'width=1400,height=900'); }
+
+// ----- Draft -----
+async function loadDraft(){
+  const r = await fetch('/api/admin/draft/state');
+  const d = await r.json();
+  $('poolCount').textContent = d.available.length;
+  $('draftPool').innerHTML = d.available.map(a => `<div class="pool-item" onclick="pickStudent('${a.id}')"><span>${escape(a.name)}</span><b style="color:var(--accent-4);">${a.total} pts</b></div>`).join('') || '<div class="muted">No available students.</div>';
+  const groups = {};
+  d.members.forEach(m => { (groups[m.team_id] ||= []).push(m); });
+  const html = d.teams.map(t => {
+    const mems = groups[t.id] || [];
+    const active = selectedStudent && mems.length < 5;
+    const memsHTML = mems.map(m => `<div class="member ${m.is_ceo?'ceo':''}">${m.is_ceo?'👑 CEO · ':''}${escape(m.name)}</div>`).join('');
+    return `<div class="team-block ${active?'active':''}" onclick="assignTo(${t.id})">
+      <div class="row-between"><b>Startup ${t.id}</b><span class="tag tag-cyan">${t.pillar}</span></div>
+      ${memsHTML}
+      <div class="muted" style="margin-top:8px;">${mems.length}/5 members</div>
+    </div>`;
+  }).join('');
+  $('draftTeams').innerHTML = html;
+}
+let selectedStudent = null;
+function pickStudent(id){ selectedStudent = id; document.querySelectorAll('.pool-item').forEach(el => el.style.borderColor = ''); event.target.closest('.pool-item').style.borderColor = 'var(--accent-4)'; loadDraft(); }
+async function assignTo(teamId){
+  if (!selectedStudent) { alert('Click a student first.'); return; }
+  const r = await fetch('/api/admin/draft/pick', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({studentId:selectedStudent, teamId})});
+  if (!r.ok) { const d = await r.json(); alert(d.error||'Assign failed'); return; }
+  selectedStudent = null; loadDraft();
+}
+async function resetDraft(){ if(!confirm('Reset the draft?')) return; await fetch('/api/admin/draft/reset', {method:'POST'}); loadDraft(); }
+
+// ----- Teams -----
+async function renderTeams() {
+  const r = await fetch('/api/admin/draft/state');
+  const d = await r.json();
+  const groups = {};
+  d.members.forEach(m => { (groups[m.team_id] ||= []).push(m); });
+  const html = d.teams.map(t => {
+    const mems = groups[t.id] || [];
+    return `<div class="card card-tight"><div class="tag tag-gold">Startup ${t.id}</div><div class="tag tag-cyan" style="margin-left:6px;">IGCF · ${t.pillar}</div>${mems.map(m=>`<div class="member ${m.is_ceo?'ceo':''}" style="margin-top:6px;">${m.is_ceo?'👑 CEO · ':''}${escape(m.name)}</div>`).join('')}</div>`;
+  }).join('');
+  $('finalTeams').innerHTML = html || '<p class="muted">Reveal CEOs and run the draft first.</p>';
+}
+
+// ----- Events / Monitor -----
+async function loadEvents(){
+  const r = await fetch('/api/admin/events?limit=300');
+  const d = await r.json();
+  const filter = ($('evFilter').value || '').toLowerCase();
+  const filtered = filter ? d.events.filter(e => (e.student_name||'').toLowerCase().includes(filter)) : d.events;
+  $('eventList').innerHTML = filtered.map(renderEventRow).join('') || '<div class="muted">No events yet.</div>';
+  // Reset counters and rebuild
+  eventCounts = { left:0, copy:0, paste:0, screen:0, devtools:0 };
+  d.events.forEach(e => bumpCounter(e.type));
+  paintCounters();
+}
+$('evFilter').oninput = () => loadEvents();
+function prependEvent(e) {
+  const list = $('eventList');
+  const row = document.createElement('div');
+  row.innerHTML = renderEventRow(e);
+  list.prepend(row.firstElementChild);
+  paintCounters();
+}
+function renderEventRow(e){
+  const time = new Date(e.ts).toLocaleTimeString();
+  const tag = tagFor(e.type);
+  return `<div class="event-row"><div><b>${escape(e.student_name || 'Unknown')}</b> <span class="muted">${e.detail?'· '+escape(e.detail):''}</span></div><div class="row" style="gap:8px;">${tag}<div class="event-time">${time}</div></div></div>`;
+}
+function tagFor(type){
+  const map = {
+    'left_site':          '<span class="tag tag-red">🚪 Left Site</span>',
+    'tab_hidden':         '<span class="tag tag-gold">👀 Tab Hidden</span>',
+    'tab_return':         '<span class="tag tag-cyan">↩ Returned</span>',
+    'window_blur':        '<span class="tag">⤵ Blur</span>',
+    'disconnected':       '<span class="tag tag-red">⛓‍💥 Disconnected</span>',
+    'idle_timeout':       '<span class="tag tag-red">⏱ Idle Timeout</span>',
+    'idle':               '<span class="tag tag-gold">💤 Idle</span>',
+    'copy':               '<span class="tag tag-pink">📋 Copy</span>',
+    'paste':              '<span class="tag tag-red">🤖 Paste (AI?)</span>',
+    'cut':                '<span class="tag tag-pink">✂ Cut</span>',
+    'right_click':        '<span class="tag">🖱 Right-click</span>',
+    'printscreen_key':    '<span class="tag tag-red">📸 Screenshot</span>',
+    'screenshot_shortcut':'<span class="tag tag-red">📸 Screenshot</span>',
+    'print_shortcut':     '<span class="tag tag-red">🖨 Print/Screenshot</span>',
+    'devtools_open':      '<span class="tag tag-red">🛠 DevTools</span>',
+    'screen_capture_attempt': '<span class="tag tag-red">🎥 Screen Capture</span>'
+  };
+  return map[type] || `<span class="tag">${escape(type)}</span>`;
+}
+function bumpCounter(type){
+  if (type === 'left_site' || type === 'disconnected' || type === 'idle_timeout' || type === 'tab_hidden') eventCounts.left++;
+  if (type === 'copy' || type === 'cut') eventCounts.copy++;
+  if (type === 'paste') eventCounts.paste++;
+  if (type === 'printscreen_key' || type === 'screenshot_shortcut' || type === 'screen_capture_attempt' || type === 'print_shortcut') eventCounts.screen++;
+  if (type === 'devtools_open') eventCounts.devtools++;
+  paintCounters();
+}
+function paintCounters(){
+  $('ev-left').textContent = eventCounts.left;
+  $('ev-copy').textContent = eventCounts.copy;
+  $('ev-paste').textContent = eventCounts.paste;
+  $('ev-screen').textContent = eventCounts.screen;
+  $('ev-devtools').textContent = eventCounts.devtools;
+}
+
+function escape(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+checkAdmin();
+</script>
+</body>
+</html>

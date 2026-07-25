@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VENTURE · Big Screen</title>
+<link rel="stylesheet" href="/shared.css">
+<style>
+  body { overflow: hidden; }
+  .stage { padding: 40px 60px; min-height: 100vh; display: flex; flex-direction: column; }
+  .stage-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .stage-title { font-size: 64px; font-weight: 900; letter-spacing: -2px; line-height: 1; }
+  .stage-sub { font-size: 20px; color: var(--text-mute); letter-spacing: 4px; text-transform: uppercase; margin-top: 8px; }
+  .stage-clock { font-size: 24px; color: var(--text-soft); font-variant-numeric: tabular-nums; }
+  .stage-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 24px; }
+  .big-stat {
+    background: var(--glass); backdrop-filter: blur(20px);
+    border: 1px solid var(--border); border-radius: 20px; padding: 24px; text-align: center;
+  }
+  .big-num {
+    font-size: 62px; font-weight: 900;
+    background: linear-gradient(90deg, var(--accent-1), var(--accent-3));
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    font-variant-numeric: tabular-nums; line-height: 1;
+  }
+  .big-label { font-size: 14px; color: var(--text-mute); letter-spacing: 2px; text-transform: uppercase; margin-top: 6px; }
+
+  .board-stage { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 24px; padding: 24px 32px; flex: 1; overflow: hidden; }
+  .board-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .board-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; height: 100%; }
+  .board-list { list-style: none; }
+  .board-item {
+    display: grid; grid-template-columns: 60px 1fr auto; gap: 16px;
+    align-items: center; padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    font-size: 18px;
+  }
+  .board-item:last-child { border-bottom: 0; }
+  .b-rank {
+    font-size: 24px; font-weight: 900; font-variant-numeric: tabular-nums;
+  }
+  .b-name { font-weight: 700; }
+  .b-score {
+    font-weight: 900; font-size: 22px; font-variant-numeric: tabular-nums;
+    color: var(--accent-4);
+  }
+  .board-item.ceo {
+    background: linear-gradient(90deg, rgba(255, 184, 74, 0.20), transparent);
+    border-radius: 10px;
+    margin-bottom: 2px;
+    border-bottom-color: transparent;
+  }
+  .board-item.top3 .b-rank {
+    background: linear-gradient(90deg, var(--accent-4), var(--accent-1));
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    font-size: 30px;
+  }
+  .ceo-crown { font-size: 20px; margin-right: 6px; }
+  .live-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 16px; border-radius: 999px; background: var(--glass); border: 1px solid var(--border);
+    font-size: 14px; letter-spacing: 1.5px; text-transform: uppercase;
+  }
+  .pulse-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent-5); box-shadow: 0 0 20px var(--accent-5); animation: dotPulse 1s infinite; }
+  @keyframes dotPulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: 0.7; } }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="stage-header">
+    <div>
+      <div class="stage-title"><span class="gradient-text">VENTURE</span></div>
+      <div class="stage-sub">Day 1 · Live Standings</div>
+    </div>
+    <div class="row" style="gap:20px;">
+      <div class="live-pill"><span class="pulse-dot"></span> Live</div>
+      <div class="stage-clock" id="clock">—</div>
+    </div>
+  </div>
+
+  <div class="stage-stats">
+    <div class="big-stat"><div class="big-num" id="s-online">0</div><div class="big-label">Online</div></div>
+    <div class="big-stat"><div class="big-num" id="s-total">0</div><div class="big-label">Players</div></div>
+    <div class="big-stat"><div class="big-num" id="s-top">0</div><div class="big-label">Top Score</div></div>
+    <div class="big-stat"><div class="big-num" id="s-avg">0</div><div class="big-label">Average</div></div>
+  </div>
+
+  <div class="board-stage">
+    <div class="board-title">
+      <h2>Standings <span class="muted" style="font-size:14px; letter-spacing:2px;">Top 12 = CEO cutoff</span></h2>
+    </div>
+    <div class="board-columns">
+      <ul class="board-list" id="col-left"></ul>
+      <ul class="board-list" id="col-right"></ul>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let ws = null;
+let students = [];
+
+function connect() {
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  ws = new WebSocket(proto + '//' + location.host + '/?role=board');
+  ws.onmessage = (m) => {
+    let msg = {};
+    try { msg = JSON.parse(m.data); } catch(e){return;}
+    if (msg.type === 'leaderboard') { students = msg.rows; render(); }
+  };
+  ws.onclose = () => setTimeout(connect, 2000);
+}
+async function initial() {
+  // Poll once via WS on connect, but also fetch REST for board view (no admin required for board)
+  // (leaderboard doesn't need auth; it uses the same WS broadcast)
+  connect();
+}
+function render() {
+  const sorted = [...students].sort((a,b) => (b.total||b.r1_score+b.r2_score+b.r3_score) - (a.total||a.r1_score+a.r2_score+a.r3_score));
+  $('s-total').textContent = sorted.length;
+  $('s-online').textContent = sorted.filter(s => s.is_online).length;
+  $('s-top').textContent = sorted.length ? (sorted[0].total || (sorted[0].r1_score+sorted[0].r2_score+sorted[0].r3_score)) : 0;
+  const totals = sorted.map(s => s.total || (s.r1_score+s.r2_score+s.r3_score));
+  const avg = totals.length ? Math.round(totals.reduce((a,b)=>a+b,0)/totals.length) : 0;
+  $('s-avg').textContent = avg;
+
+  const rows = sorted.slice(0, 30).map((s,i) => {
+    const total = s.total || (s.r1_score+s.r2_score+s.r3_score);
+    const cls = ['board-item'];
+    if (i < 3) cls.push('top3');
+    if (i < 12) cls.push('ceo');
+    const crown = i < 12 ? '<span class="ceo-crown">👑</span>' : '';
+    return `<li class="${cls.join(' ')}"><div class="b-rank">${i+1}</div><div class="b-name">${crown}${escape(s.name)}</div><div class="b-score">${total}</div></li>`;
+  });
+  $('col-left').innerHTML = rows.slice(0, 15).join('') || '<li class="muted" style="padding:20px;">Waiting for players…</li>';
+  $('col-right').innerHTML = rows.slice(15, 30).join('');
+}
+function escape(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function tick(){ const d = new Date(); $('clock').textContent = d.toLocaleTimeString(); }
+setInterval(tick, 1000); tick();
+initial();
+</script>
+</body>
+</html>

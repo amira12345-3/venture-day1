@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VENTURE · Day 1</title>
+<link rel="stylesheet" href="/shared.css">
+<style>
+  .hero-num {
+    font-size: 96px; font-weight: 900; line-height: 1;
+    background: linear-gradient(90deg, var(--accent-1), var(--accent-3));
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    letter-spacing: -4px;
+  }
+  .round-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-top: 20px; }
+  .r-card-num { font-size: 42px; font-weight: 900; letter-spacing: -2px; }
+  .r-card-num.p1 { color: var(--accent-1); }
+  .r-card-num.p2 { color: var(--accent-2); }
+  .r-card-num.p3 { color: var(--accent-3); }
+</style>
+</head>
+<body>
+
+<header class="top-bar">
+  <div class="logo">
+    <div class="logo-mark">V</div>
+    <div class="logo-block"><span>VENTURE</span><span class="logo-sub">Day 1 · Live</span></div>
+  </div>
+  <div class="top-actions">
+    <div id="me" class="pill hidden"><span class="dot"></span> <span id="meName">—</span></div>
+    <button id="logoutBtn" class="btn-ghost hidden">Logout</button>
+  </div>
+</header>
+
+<main class="container">
+
+  <!-- LOGIN -->
+  <section id="scr-login" class="card container-narrow" style="margin-top:6vh;">
+    <div class="center">
+      <div class="hero-num">01</div>
+      <div class="muted" style="letter-spacing:3px; margin-bottom:16px;">WELCOME</div>
+      <h1>Enter <span class="gradient-text">VENTURE</span></h1>
+      <p class="lead">Type your full name to join Day 1. Your login is saved — you can close the tab and come back anytime.</p>
+    </div>
+    <div class="field">
+      <label>Full Name · الاسم الكامل</label>
+      <input id="loginName" type="text" placeholder="e.g., Ahmed Al Marzooqi" autocomplete="off" autofocus>
+    </div>
+    <button id="loginBtn" class="btn btn-lg" style="width:100%;">Enter VENTURE →</button>
+    <div id="loginErr" class="tag tag-red" style="margin-top:14px; display:none;"></div>
+  </section>
+
+  <!-- WAITING ROOM -->
+  <section id="scr-waiting" class="hidden">
+    <div class="card center">
+      <span class="tag tag-green">✓ You're checked in</span>
+      <h1 style="margin-top:16px;">The Program begins <span class="gradient-text">soon</span></h1>
+      <p class="lead">You will compete across three rounds. The top 12 scorers will be named <b>CEOs</b> and will draft their teams live.</p>
+      <div class="stats">
+        <div class="stat"><div class="stat-num">3</div><div class="stat-label">Rounds</div></div>
+        <div class="stat"><div class="stat-num">50</div><div class="stat-label">Questions</div></div>
+        <div class="stat"><div class="stat-num">500</div><div class="stat-label">Max Points</div></div>
+        <div class="stat"><div class="stat-num" id="w-online">0</div><div class="stat-label">Online Now</div></div>
+      </div>
+      <div class="round-cards">
+        <div class="round-card">
+          <div class="round-pill">Round 1</div>
+          <div class="r-card-num p1">15</div>
+          <div style="font-weight:700; margin-top:4px;">Innovation & Entrepreneurship</div>
+          <div class="muted" style="margin-top:6px;">15 questions · 150 pts · 30s each</div>
+        </div>
+        <div class="round-card">
+          <div class="round-pill">Round 2</div>
+          <div class="r-card-num p2">15</div>
+          <div style="font-weight:700; margin-top:4px;">AI & Technology</div>
+          <div class="muted" style="margin-top:6px;">15 questions · 150 pts · 30s each</div>
+        </div>
+        <div class="round-card">
+          <div class="round-pill">Round 3</div>
+          <div class="r-card-num p3">20</div>
+          <div style="font-weight:700; margin-top:4px;">IGCF Challenge Rapid-Fire</div>
+          <div class="muted" style="margin-top:6px;">20 questions · 200 pts · 25s each</div>
+        </div>
+      </div>
+      <div id="waitingHint" style="margin-top:28px;">
+        <span class="tag tag-cyan">⏳ Waiting for admin to start the round…</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="scr-quiz" class="hidden">
+    <div class="card">
+      <div class="row-between" style="margin-bottom:8px;">
+        <div>
+          <div class="round-pill" id="qPill">Round 1</div>
+          <h2 id="qTitle">Innovation & Entrepreneurship</h2>
+          <div class="muted" id="qTitleAr" style="direction:rtl; text-align:right;"></div>
+        </div>
+        <div class="timer" id="qTimer">30</div>
+      </div>
+      <div class="progress"><div class="progress-bar" id="qProgress" style="width:0%;"></div></div>
+      <div class="row-between muted" style="margin-bottom:10px;">
+        <span>Question <b id="qNum" style="color:var(--text);">1</b> of <b id="qTotal" style="color:var(--text);">15</b></span>
+        <span>Round points: <b id="qPointsSoFar" style="color:var(--accent-4);">0</b></span>
+      </div>
+      <div class="q-text" id="qText">…</div>
+      <div class="q-ar" id="qTextAr">…</div>
+      <div class="options" id="qOptions"></div>
+      <div class="row" style="justify-content:flex-end;">
+        <button id="qSubmit" class="btn" disabled>Submit Answer</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ROUND DONE -->
+  <section id="scr-done" class="hidden">
+    <div class="card center">
+      <span class="tag tag-green">Round Complete</span>
+      <h1 style="margin-top:14px;">Well done 🚀</h1>
+      <p class="lead">Take a short break while other players finish.</p>
+      <div class="stats">
+        <div class="stat"><div class="stat-num" id="d-round">0</div><div class="stat-label">This Round</div></div>
+        <div class="stat"><div class="stat-num" id="d-total">0</div><div class="stat-label">Total Score</div></div>
+        <div class="stat"><div class="stat-num" id="d-correct">0</div><div class="stat-label">Correct</div></div>
+        <div class="stat"><div class="stat-num" id="d-rank">—</div><div class="stat-label">Live Rank</div></div>
+      </div>
+      <p class="muted" style="margin-top:20px;">The admin will start the next round when everyone is ready.</p>
+    </div>
+  </section>
+
+  <!-- CEO REVEAL (student view) -->
+  <section id="scr-ceo" class="hidden">
+    <div class="card center">
+      <span class="tag tag-gold">CEO Announcement</span>
+      <h1 style="margin-top:14px;" class="gradient-text">Top 12 CEOs</h1>
+      <p class="lead">Watch the big screen — the top 12 scorers are being named CEO of a startup.</p>
+      <div id="youAreCEO" class="hidden" style="margin-top:20px;">
+        <div class="tag tag-gold" style="font-size:14px; padding: 10px 20px;">👑 YOU ARE A CEO</div>
+        <p class="lead" style="margin-top:12px;">Get ready to draft your team.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINAL -->
+  <section id="scr-final" class="hidden">
+    <div class="card center">
+      <span class="tag tag-cyan">Day 1 Complete</span>
+      <h1 style="margin-top:14px;">Your <span class="gradient-text">Startup</span></h1>
+      <div id="myTeam" style="margin-top:24px;"></div>
+      <p class="muted" style="margin-top:24px;">Day 2 starts tomorrow at 11:00 AM.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer>VENTURE · Powered by RQ Science & Technology · 2026</footer>
+
+<script>
+// ============================================================
+// STUDENT APP
+// ============================================================
+const $ = (id) => document.getElementById(id);
+const show = (id) => {
+  ['scr-login','scr-waiting','scr-quiz','scr-done','scr-ceo','scr-final'].forEach(s => $(s).classList.add('hidden'));
+  $(id).classList.remove('hidden');
+  window.scrollTo(0,0);
+};
+
+let me = null;
+let ws = null;
+let state = { phase: 'waiting', activeRound: 0 };
+let quiz = null;
+
+// ---------- Auth ----------
+async function checkMe() {
+  const r = await fetch('/api/student/me');
+  if (r.ok) {
+    me = await r.json();
+    $('meName').textContent = me.name;
+    $('me').classList.remove('hidden');
+    $('logoutBtn').classList.remove('hidden');
+    handlePhase(me.phase, me.activeRound);
+    connectWS();
+  } else {
+    show('scr-login');
+  }
+}
+$('loginBtn').onclick = async () => {
+  const name = $('loginName').value.trim();
+  if (!name) { $('loginErr').textContent = 'Please type your full name.'; $('loginErr').style.display='inline-block'; return; }
+  const r = await fetch('/api/student/login', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name })
+  });
+  const d = await r.json();
+  if (!r.ok) { $('loginErr').textContent = d.error || 'Login failed.'; $('loginErr').style.display='inline-block'; return; }
+  checkMe();
+};
+$('loginName').addEventListener('keydown', e => { if (e.key === 'Enter') $('loginBtn').click(); });
+$('logoutBtn').onclick = async () => {
+  await fetch('/api/student/logout', { method: 'POST' });
+  location.reload();
+};
+
+// ---------- WebSocket ----------
+function connectWS() {
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  ws = new WebSocket(proto + '//' + location.host + '/?role=student');
+  ws.onopen = () => {
+    setInterval(() => { if (ws.readyState === 1) ws.send(JSON.stringify({ type: 'heartbeat' })); }, 5000);
+  };
+  ws.onmessage = (m) => {
+    let msg = {};
+    try { msg = JSON.parse(m.data); } catch (e) { return; }
+    if (msg.type === 'round_started') {
+      state.activeRound = msg.round; state.phase = 'round' + msg.round;
+      startRound(msg.round);
+    } else if (msg.type === 'phase') {
+      state.phase = msg.phase;
+      handlePhase(msg.phase, state.activeRound);
+    } else if (msg.type === 'leaderboard') {
+      $('w-online').textContent = msg.rows.filter(r => r.is_online).length;
+    } else if (msg.type === 'reset') {
+      location.reload();
+    }
+  };
+  ws.onclose = () => setTimeout(connectWS, 2000);
+}
+
+function handlePhase(phase, activeRound) {
+  if (phase === 'waiting') show('scr-waiting');
+  else if (phase.startsWith('round')) { if (!me.done['r'+activeRound]) startRound(activeRound); else show('scr-done'); }
+  else if (phase === 'ceo') show('scr-ceo');
+  else if (phase === 'final') show('scr-final');
+  else show('scr-waiting');
+}
+
+// ---------- Quiz ----------
+async function startRound(n) {
+  const r = await fetch('/api/quiz/' + n);
+  if (!r.ok) { show('scr-waiting'); return; }
+  const round = await r.json();
+  quiz = { n, round, index: 0, selected: null, correct: 0, roundScore: 0, timer: null, timeLeft: round.timePerQuestion };
+  $('qPill').textContent = 'Round ' + n;
+  $('qTitle').textContent = round.title;
+  $('qTitleAr').textContent = round.titleAr;
+  $('qTotal').textContent = round.questions.length;
+  show('scr-quiz');
+  renderQ();
+}
+function renderQ() {
+  const q = quiz.round.questions[quiz.index];
+  $('qNum').textContent = quiz.index + 1;
+  $('qProgress').style.width = (quiz.index / quiz.round.questions.length * 100) + '%';
+  $('qText').textContent = q.q;
+  $('qTextAr').textContent = q.qAr;
+  $('qPointsSoFar').textContent = quiz.roundScore;
+  const html = q.options.map((opt, i) => `<div class="option" data-i="${i}"><div class="letter">${'ABCD'[i]}</div><div>${opt}</div></div>`).join('');
+  $('qOptions').innerHTML = html;
+  quiz.selected = null;
+  $('qSubmit').disabled = true;
+  document.querySelectorAll('.option').forEach(el => {
+    el.onclick = () => {
+      document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+      el.classList.add('selected');
+      quiz.selected = parseInt(el.dataset.i);
+      $('qSubmit').disabled = false;
+    };
+  });
+  startTimer(quiz.round.timePerQuestion);
+}
+function startTimer(sec) {
+  clearInterval(quiz.timer);
+  quiz.timeLeft = sec;
+  updateTimer();
+  quiz.timer = setInterval(() => {
+    quiz.timeLeft--;
+    updateTimer();
+    if (quiz.timeLeft <= 0) { clearInterval(quiz.timer); submitAnswer(true); }
+  }, 1000);
+}
+function updateTimer() {
+  const el = $('qTimer');
+  el.textContent = quiz.timeLeft;
+  el.classList.remove('warn','danger');
+  if (quiz.timeLeft <= 5) el.classList.add('danger');
+  else if (quiz.timeLeft <= 10) el.classList.add('warn');
+}
+$('qSubmit').onclick = () => submitAnswer(false);
+async function submitAnswer(timeout) {
+  clearInterval(quiz.timer);
+  const selected = timeout ? -1 : quiz.selected;
+  await fetch('/api/quiz/' + quiz.n + '/answer', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ qIndex: quiz.index, selected })
+  });
+  // Optimistic local scoring is skipped; server holds truth. We just track locally for UI.
+  quiz.index++;
+  if (quiz.index >= quiz.round.questions.length) {
+    const r = await fetch('/api/quiz/' + quiz.n + '/finish', { method:'POST' });
+    const d = await r.json();
+    $('d-round').textContent = d.score || 0;
+    $('d-correct').textContent = (d.correct || 0) + ' / ' + quiz.round.questions.length;
+    const meR = await (await fetch('/api/student/me')).json();
+    me = meR;
+    $('d-total').textContent = me.r1 + me.r2 + me.r3;
+    show('scr-done');
+  } else {
+    renderQ();
+  }
+}
+
+// ============================================================
+// SILENT MONITORING — reported to admin only
+// ============================================================
+function reportEvent(type, detail='') {
+  if (!me) return;
+  fetch('/api/event', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ type, detail })
+  }).catch(()=>{});
+}
+// Tab hidden / left site
+let hiddenStart = 0;
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { hiddenStart = Date.now(); reportEvent('tab_hidden'); }
+  else if (hiddenStart) {
+    const away = Math.round((Date.now() - hiddenStart) / 1000);
+    reportEvent('tab_return', 'away ' + away + 's');
+    if (away > 5) reportEvent('left_site', 'away ' + away + 's');
+    hiddenStart = 0;
+  }
+});
+// Window blur/focus
+window.addEventListener('blur', () => reportEvent('window_blur'));
+// Copy / paste / cut
+document.addEventListener('copy', () => reportEvent('copy'));
+document.addEventListener('paste', () => reportEvent('paste', 'possible AI usage'));
+document.addEventListener('cut', () => reportEvent('cut'));
+// Right-click
+document.addEventListener('contextmenu', () => reportEvent('right_click'));
+// Print screen key
+document.addEventListener('keyup', (e) => {
+  if (e.key === 'PrintScreen') reportEvent('printscreen_key', 'screenshot attempt');
+  if ((e.ctrlKey || e.metaKey) && (e.shiftKey && (e.key === 'S' || e.key === 's'))) reportEvent('screenshot_shortcut');
+  if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) reportEvent('print_shortcut', 'possible screenshot');
+});
+// DevTools open detection (crude but useful)
+let devtoolsOpen = false;
+setInterval(() => {
+  const threshold = 160;
+  const open = window.outerWidth - window.innerWidth > threshold || window.outerHeight - window.innerHeight > threshold;
+  if (open && !devtoolsOpen) { devtoolsOpen = true; reportEvent('devtools_open'); }
+  else if (!open && devtoolsOpen) devtoolsOpen = false;
+}, 2000);
+// Screen capture API monitor (Chrome fires this when screen is being shared)
+if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+  const orig = navigator.mediaDevices.getDisplayMedia.bind(navigator.mediaDevices);
+  navigator.mediaDevices.getDisplayMedia = function(...args) {
+    reportEvent('screen_capture_attempt', 'getDisplayMedia called');
+    return orig(...args);
+  };
+}
+// Idle detection
+let lastMove = Date.now();
+['mousemove','keydown','touchstart'].forEach(ev => document.addEventListener(ev, () => lastMove = Date.now()));
+setInterval(() => { if (Date.now() - lastMove > 60000) { reportEvent('idle', '60s no input'); lastMove = Date.now(); } }, 15000);
+
+// Start
+checkMe();
+</script>
+</body>
+</html>
