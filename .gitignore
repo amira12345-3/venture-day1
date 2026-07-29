@@ -1,6 +1,5 @@
-node_modules/
-venture.db
-venture.db-shm
-venture.db-wal
+node_modules
+.next
 .env
-.DS_Store
+.env.local
+*.log

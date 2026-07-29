@@ -1,17 +1,29 @@
 {
   "name": "venture-day1",
   "version": "1.0.0",
-  "description": "VENTURE Day 1 Live Web App — real-time quiz, leaderboard, CEO draft",
-  "main": "server.js",
+  "private": true,
   "scripts": {
-    "start": "node server.js"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "seed": "node scripts/seed-questions.mjs",
+    "create-admin": "node scripts/create-super-admin.mjs"
   },
   "dependencies": {
-    "express": "^4.19.2",
-    "ws": "^8.18.0",
-    "better-sqlite3": "^11.3.0",
-    "cookie-parser": "^1.4.7",
-    "nanoid": "^3.3.7"
+    "@supabase/ssr": "^0.5.2",
+    "@supabase/supabase-js": "^2.45.0",
+    "next": "^14.2.15",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "server-only": "^0.0.1"
   },
-  "engines": { "node": ">=18" }
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.13",
+    "typescript": "^5.6.2"
+  }
 }
