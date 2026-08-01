@@ -1,6 +1,6 @@
 # VENTURE — Day 1 Live App
 
-A production-ready, bilingual (EN/AR) live event platform for a venture & startup camp: three timed elimination rounds (60 → 45 → 30 → 15), a live leaderboard, a cinematic Top-15 CEO reveal, a snake team draft into 15 startups of 4 (CEO + Technical Lead + Design & Research Lead + Business & Marketing Lead) with AI-computed private position suggestions, and IGCF pillar assignment — for ~60 students on phones, with facilitators running the show from a protected admin dashboard.
+A production-ready, bilingual (EN/AR) live event platform for a venture & startup camp: three timed elimination rounds (60 → 45 → 30 → 15) that each mix innovation, AI, design, business, and IGCF case questions, a live leaderboard, a cinematic Top-15 CEO reveal, and a snake team draft into 15 startups of 4 (CEO + Technical Lead + Design & Research Lead + Business & Marketing Lead) guided by answer-based position suggestions — for ~60 students on phones, with facilitators running the show from a protected admin dashboard.
 
 **Stack:** Next.js 14 (App Router) · TypeScript · Tailwind CSS · Supabase (Postgres, Auth, Realtime, Row-Level Security)
 
@@ -79,9 +79,8 @@ Any Node host works: `npm run build && npm start`.
 5. **Ending each round applies the elimination cut automatically**: Round 1 keeps the top 45 in the CEO race, Round 2 the top 30, Round 3 the top 15 (same tie-breakers throughout: total → R3 → R2 → R1 → fastest response). Students who leave the race see a supportive "you're in the draft pool" screen and stay in the event.
 6. **Reveal Top 15 CEOs** — the top 15 still-in-race students, ranked. At this moment the platform also privately computes every student's suggested position (Technical / Design & Research / Business & Marketing) from which role-tagged questions they answered correctly, tie-broken by speed. Suggestions appear ONLY on the admin draft board — never to students.
 7. **Open CEO team draft** → Draft & Teams page. Pick order snakes 1→15, 15→1, 1→15 (3 picks per team = 45 picks, everyone placed). Each pick auto-assigns the student's suggested seat if it's free, else the best open seat; you can change any member's position or move them between teams. Undo and lock are one click; duplicates and 5-member teams are impossible (server + DB checks). Students watch live but cannot control it.
-8. Assign IGCF pillars (auto-balanced — 15 teams over 5 pillars lands exactly 3 each — or manual) and lock.
-9. **Reveal final teams** — each student sees their startup and everyone's position first, with all 15 viewable and a print/download summary.
-10. Export anything as CSV: students, scores, answers, CEOs, teams, question bank, audit log.
+8. **Reveal final teams** — each student sees their startup and everyone's position first, with all 15 viewable and a print/download summary.
+9. Export anything as CSV: students, scores, answers, CEOs, teams, question bank, audit log.
 
 **Demo Mode** (Super Admin): generate 60 clearly-marked `DEMO-###` students with plausible scores to rehearse the cuts, the CEO reveal, and the draft, then "Remove demo data only" — real records untouched.
 

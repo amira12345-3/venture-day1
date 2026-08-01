@@ -4,9 +4,10 @@
 - **Format:** 60 students → Round 1 keeps top **45** → Round 2 keeps top **30** → Round 3 keeps top **15**, who become the CEOs (by rank). Ending a round applies the cut automatically.
 - **Teams:** **15 startups × 4 members** — CEO + Technical Lead (AI & Build) + Design & Research Lead + Business & Marketing Lead.
 - **Private position suggestions:** every question is tagged with a role. The platform computes each student's best-fit position from their correct answers (tie-broken by speed) and shows it **only on the admin draft board** — students never see it. Picks auto-fill the best open seat; admins can change any position.
-- **Questions:** new role-balanced bank. Round 3 is now **IGCF Case Challenges** — short problem-statement scenarios across the five pillars (Sharjah/UAE context). All rounds are **30 seconds** per question.
+- **Questions:** new role-balanced bank where EVERY round mixes all topics — innovation & entrepreneurship, AI & technology, design, business, and IGCF case-style problem statements (Sharjah/UAE context). Rounds are named Founders Qualifier → The Contenders → Road to CEO. All rounds are **30 seconds** per question.
 - **Shuffling:** every student receives the questions in their own shuffled order (stable across refreshes) — screens next to each other show different questions.
 - **Eliminated students** see a supportive "you're in the draft pool" screen, stay in the event, appear grayed on the leaderboard, and get drafted like everyone else.
+- **No pillar step:** the pillar-assignment flow has been removed — after the draft, teams are final. (The IGCF theme lives inside the questions instead.)
 
 ## How to apply the update to your LIVE site (10 minutes)
 1. **Database:** Supabase → SQL Editor → New query → paste the contents of
